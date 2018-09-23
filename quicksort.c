@@ -11,9 +11,40 @@
 #include "const.h"
 #include "util.h"
 
-// TODO: implement
+void swap(UINT *A, int a, int b) {
+    UINT temp;
+    temp = A[a]; 
+    A[a] = A[b]; 
+    A[b] = temp;
+}
+
+int partition (UINT* A, int lo, int hi){
+    
+    int pivot = A[hi];
+    int i = (lo - 1);
+    
+    for (int j = lo; j <= hi-1; j++){
+        
+        if (A[j] <= pivot){
+            i++;
+            swap(A, i, j);
+        }
+    }
+    swap(A, i + 1, hi);
+    return (i + 1);
+}
+
 int quicksort(UINT* A, int lo, int hi) {
+
+	if(lo<hi){
+
+        int split = partition(A, lo, hi);
+	quicksort(A,lo,split-1);
+	quicksort(A,split+1,hi);
+
+	}
     return 0;
+    
 }
 
 // TODO: implement
