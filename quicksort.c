@@ -23,14 +23,57 @@ int parallel_quicksort(UINT* A, int lo, int hi) {
 
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
+	int num_exp, num_pot, num_pos, opt;
 
     /* Get the number of CPU cores available */
     printf("[quicksort] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
 
     /* TODO: parse arguments with getopt */
+	while ((opt = getopt (argc, argv, "E:T:P:")) != -1)
+	{
+		switch (opt)
+		{
+			case 'E':
+				num_exp = atoi(optarg);
+				printf("E = %i", num_exp);
+				if(num_exp < 1) {
+					printf("-E value out of range, exiting program\n");
+					exit(-1);
+				}
+				break;
+			case 'T':
+				num_pot = atoi(optarg);
+				if(num_pot < 3 || num_pot > 9){
+					printf("-T value out of range, exiting program\n");
+					exit(-1);
+				}
+				break;
+			case 'P':
+				num_pos = atoi(optarg);
+				printf("P = %i", num_pos);
+				break;
+			case '?':
+				printf("please use -e <number of experiments> -t <exponent of size of array> -p <position to find in array>");
+				break;
+		}
+	}
+	if(num_pos < 0 || num_pos > pow(10,num_pot)){
+		printf("-P value out of range, exiting program\n"); 
+		exit(-1);
+	}
 
     /* TODO: start datagen here as a child process. */
+	int pid = fork();
+	if(pid == 0){
+		execvp("./datagen", argv);
+	}
+	else if (pid > 0){
+		printf("datagen in action\n");
+	}
+	else if (pid < 0){
+		fprintf(stderr, "Cannot make datagen child\n"); 
+	}
 
     /* Create the domain socket to talk to datagen. */
     struct sockaddr_un addr;
