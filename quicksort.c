@@ -54,46 +54,39 @@ int parallel_quicksort(UINT* A, int lo, int hi) {
 
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
-	int num_exp, num_pot, num_pos, opt;
+	int num_exp, opt, num_pot;
+	char *c_num_pot;
 
     /* Get the number of CPU cores available */
     printf("[quicksort] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
 
     /* TODO: parse arguments with getopt */
-	while ((opt = getopt (argc, argv, "E:T:P:")) != -1)
+	while ((opt = getopt (argc, argv, "E:T:")) != -1)
 	{
 		switch (opt)
 		{
 			case 'E':
 				num_exp = atoi(optarg);
-				printf("E = %i", num_exp);
 				if(num_exp < 1) {
 					printf("-E value out of range, exiting program\n");
 					exit(-1);
 				}
 				break;
 			case 'T':
+				c_num_pot = optarg;
 				num_pot = atoi(optarg);
 				if(num_pot < 3 || num_pot > 9){
 					printf("-T value out of range, exiting program\n");
 					exit(-1);
 				}
 				break;
-			case 'P':
-				num_pos = atoi(optarg);
-				printf("P = %i", num_pos);
-				break;
 			case '?':
-				printf("please use -e <number of experiments> -t <exponent of size of array> -p <position to find in array>");
+				printf("please use -E <number of experiments> -T <exponent of size of array> -P <position to find in array>");
 				break;
 		}
 	}
-	if(num_pos < 0 || num_pos > pow(10,num_pot)){
-		printf("-P value out of range, exiting program\n"); 
-		exit(-1);
-	}
-
+	printf("c_num_pot = %s\n", c_num_pot);
     /* TODO: start datagen here as a child process. */
 	int pid = fork();
 	if(pid == 0){
@@ -126,13 +119,18 @@ int main(int argc, char** argv) {
     }
 
     /* DEMO: request two sets of unsorted random numbers to datagen */
-    for (int i = 0; i < 2; i++) {
-        /* T value 3 hardcoded just for testing. */
-        char *begin = "BEGIN U 3";
-        int rc = strlen(begin);
+    for (int i = 0; i < num_exp; i++) {
+        char *begin = "BEGIN U ";
+        size_t len = strlen(begin);
+        char *begin_w_num = malloc(len + 1+ 1);
+        strcpy(begin_w_num, begin);
+        begin_w_num[len] = c_num_pot[0];
+        begin_w_num[len + 1] = '\0';
+        printf("sent command to datagen: %s\n", begin_w_num);
+        int rc = strlen(begin_w_num);
 
         /* Request the random number stream to datagen */
-        if (write(fd, begin, strlen(begin)) != rc) {
+        if (write(fd, begin_w_num, strlen(begin_w_num)) != rc) {
             if (rc > 0) fprintf(stderr, "[quicksort] partial write.\n");
             else {
                 perror("[quicksort] write error.\n");
@@ -152,7 +150,7 @@ int main(int argc, char** argv) {
         }
 
         UINT readvalues = 0;
-        size_t numvalues = pow(10, 3);
+        size_t numvalues = pow(10, num_pot);
         size_t readbytes = 0;
 
         UINT *readbuf = malloc(sizeof(UINT) * numvalues);
@@ -167,7 +165,10 @@ int main(int argc, char** argv) {
         for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
             printf("%u\n", *pv);
         }
-
+        /* Chago, por aqui se reciben los valores e intente pasarlos por el metodo
+        trata de recibirlos bien aqui y que se ordenen, el T y E se manejan bien */
+        //UINT *array = malloc(sizeof(UINT) * pow(10, num_pot));
+        quicksort(readbuf, 0, (pow(10, num_pot) - 1) );
         free(readbuf);
     }
 
