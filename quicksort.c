@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 				break;
 			case '?':
 				printf("please use -E <number of experiments> -T <exponent of size of array> -P <position to find in array>");
-				break;
+				exit(-1);
 		}
 	}
 	printf("c_num_pot = %s\n", c_num_pot);
@@ -97,6 +97,7 @@ int main(int argc, char** argv) {
 	}
 	else if (pid < 0){
 		fprintf(stderr, "Cannot make datagen child\n"); 
+		exit(-1);
 	}
 
     /* Create the domain socket to talk to datagen. */
@@ -162,13 +163,17 @@ int main(int argc, char** argv) {
         }
 
         /* Print out the values obtained from datagen */
+        printf("E%i: ", i + 1);
         for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
-            printf("%u\n", *pv);
+            printf("%u, ", *pv);
         }
-        /* Chago, por aqui se reciben los valores e intente pasarlos por el metodo
-        trata de recibirlos bien aqui y que se ordenen, el T y E se manejan bien */
-        //UINT *array = malloc(sizeof(UINT) * pow(10, num_pot));
+        printf("\n");
         quicksort(readbuf, 0, (pow(10, num_pot) - 1) );
+        printf("S%i: ", i + 1);
+        for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
+            printf("%u, ", *pv);
+        }
+        printf("\n");
         free(readbuf);
     }
 
