@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
+#include <assert.h>
 #include "types.h"
 #include "const.h"
 #include "util.h"
@@ -47,10 +49,68 @@ int quicksort(UINT* A, int lo, int hi) {
     
 }
 
-// TODO: implement
-int parallel_quicksort(UINT* A, int lo, int hi) {
-    return 0;
+// parallel quicksort
+
+struct qsort_starter
+{
+    UINT* A;
+    int lo;
+    int hi;
+    int depth;
+};
+
+
+
+int parallel_partition(UINT* A, int lo, int hi, int pivot_index) {
+	
+    int pivotValue = A[pivot_index];
+    swap(A, pivot_index, hi);
+    int storeIndex = lo;
+    for (int i=lo ; i<hi ; i++)
+    {
+        if(A[i]<= pivotValue)
+        {
+            swap(A, i, storeIndex);
+            storeIndex++;
+        }
+    }
+    swap(A, storeIndex, hi);
+    return storeIndex;
 }
+
+void parallel_quicksort(UINT* A, int lo, int hi, int depth);
+
+void* quicksort_thread(void *init)
+{
+    struct qsort_starter *start = init;
+    parallel_quicksort(start -> A, start -> lo, start -> hi, start -> depth);
+    return NULL;
+}    
+
+void parallel_quicksort(UINT* A, int lo, int hi, int depth) {
+    
+    if (lo < hi)
+    {
+        int pivotIndex = lo + (hi - lo)/2;
+        pivotIndex = parallel_partition(A, lo, hi, pivotIndex);
+        if (depth-- > 0)
+        {
+	    struct qsort_starter arg = {A, lo, pivotIndex-1, depth};
+            pthread_t thread;
+            int ret = pthread_create(&thread, NULL, quicksort_thread, &arg);
+            assert((ret == 0) && "Thread creation failed");
+            parallel_quicksort(A, pivotIndex+1, hi, depth);
+            pthread_join(thread, NULL);
+        }
+        else
+        {
+            quicksort(A, lo, pivotIndex-1);
+            quicksort(A, pivotIndex+1, hi);
+        }
+     }
+}
+
+
 
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
@@ -60,8 +120,7 @@ int main(int argc, char** argv) {
     /* Get the number of CPU cores available */
     printf("[quicksort] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
-
-    /* TODO: parse arguments with getopt */
+    int depth = sysconf(_SC_NPROCESSORS_ONLN);
 	while ((opt = getopt (argc, argv, "E:T:")) != -1)
 	{
 		switch (opt)
@@ -165,10 +224,13 @@ int main(int argc, char** argv) {
         for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
             printf("%u\n", *pv);
         }
-        /* Chago, por aqui se reciben los valores e intente pasarlos por el metodo
-        trata de recibirlos bien aqui y que se ordenen, el T y E se manejan bien */
         //UINT *array = malloc(sizeof(UINT) * pow(10, num_pot));
-        quicksort(readbuf, 0, (pow(10, num_pot) - 1) );
+        int lenght = (pow(10, num_pot) -1);
+        parallel_quicksort(readbuf, 0, lenght, depth);
+        //quicksort(readbuf, 0, (pow(10, num_pot) - 1) );
+	for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
+            printf("%u\n", *pv);
+        }
         free(readbuf);
     }
 
