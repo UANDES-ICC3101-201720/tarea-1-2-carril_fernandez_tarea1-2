@@ -1,2 +1,8 @@
 Ignacio Carril
 Santiago Fernández
+
+Hubo problemas ubicando todo las distintas cosas ya implementadas en el socket, y como manejarlas d manera apropiada.
+
+Hubo complicaciones al implementar el quicksort paralelo y probarlo de manera apropiada.
+
+Hasta donde entendemos, tiene todas las funcionalidades pedidas.

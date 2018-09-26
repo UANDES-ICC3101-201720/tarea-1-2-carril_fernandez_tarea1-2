@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     /* Get the number of CPU cores available */
     printf("[quicksort] Number of cores available: '%ld'\n",
            sysconf(_SC_NPROCESSORS_ONLN));
-    int depth = sysconf(_SC_NPROCESSORS_ONLN);
+    int depth = 2 * (sysconf(_SC_NPROCESSORS_ONLN));
 	while ((opt = getopt (argc, argv, "E:T:")) != -1)
 	{
 		switch (opt)
@@ -230,8 +230,9 @@ int main(int argc, char** argv) {
         int lenght = (pow(10, num_pot) -1);
         parallel_quicksort(readbuf, 0, lenght, depth);
         //quicksort(readbuf, 0, (pow(10, num_pot) - 1) );
+        printf("\nS%i: ", i + 1);
 	for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++) {
-            printf("%u\n", *pv);
+            printf("%u, ", *pv);
         }
         free(readbuf);
     }
